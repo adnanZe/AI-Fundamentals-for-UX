@@ -1,0 +1,40 @@
+<div class="example-card right">
+    <div class="card-header">
+        <div class="badge right-badge">✅</div>
+        <h2>What do people need?</h2>
+    </div>
+
+    <div class="search-container">
+        <div class="search-input-group">
+            <input type="text" [(ngModel)]="searchQuery" placeholder="What are you looking for?" class="search-input"
+                (keyup.enter)="onSearch()" />
+            <button (click)="onSearch()" [disabled]="isSearching() || !searchQuery()" class="search-button">
+                @if (isSearching()) {
+                <span class="spinner"></span>
+                Searching...
+                } @else {
+                🔍 Search
+                }
+            </button>
+        </div>
+
+        @if (results().length > 0) {
+        <div class="results">
+            @for (result of results(); track $index) {
+            <div class="result-card">
+                <h3>{{ result.title }}</h3>
+                <p>{{ result.description }}</p>
+            </div>
+            }
+        </div>
+        }
+
+        @if (!isSearching() && results().length === 0 && !searchQuery()) {
+        <div class="empty-state">
+            <div class="empty-icon">✨</div>
+            <p>Simply type what you're looking for</p>
+            <p class="empty-subtext">AI will handle the rest automatically</p>
+        </div>
+        }
+    </div>
+</div>

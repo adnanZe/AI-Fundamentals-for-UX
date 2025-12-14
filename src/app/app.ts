@@ -1,12 +1,11 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { WrongExampleComponent } from './components/wrong-example/wrong-example';
+import { RightExampleComponent } from './components/right-example/right-example';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [WrongExampleComponent, RightExampleComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('human-centered-ai-principles');
-}
+export class App {}

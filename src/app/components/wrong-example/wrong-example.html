@@ -1,0 +1,72 @@
+<div class="example-card wrong">
+    <div class="card-header">
+        <div class="badge wrong-badge">❌</div>
+        <h2>What can AI do?</h2>
+    </div>
+
+    <div class="search-container">
+        <div class="search-input-group">
+            <input type="text" [(ngModel)]="searchQuery" placeholder="Enter your search query..."
+                class="search-input" />
+            <button (click)="onSearch()" [disabled]="isSearching() || !searchQuery()" class="search-button">
+                @if (isSearching()) {
+                Searching...
+                } @else {
+                Search
+                }
+            </button>
+        </div>
+
+        <div class="ai-config">
+            <h3>AI Configuration</h3>
+
+            <div class="config-group">
+                <label>AI Model</label>
+                <select [(ngModel)]="selectedAiModel" class="config-select">
+                    @for (model of aiModels; track model) {
+                    <option [value]="model">{{ model }}</option>
+                    }
+                </select>
+            </div>
+
+            <div class="config-group">
+                <label>Temperature: {{ temperature() }}</label>
+                <input type="range" min="0" max="2" step="0.1" [ngModel]="temperature()"
+                    (ngModelChange)="temperature.set($event)" class="config-slider" />
+            </div>
+
+            <div class="config-group">
+                <label>Max Tokens: {{ maxTokens() }}</label>
+                <input type="range" min="100" max="4000" step="100" [ngModel]="maxTokens()"
+                    (ngModelChange)="maxTokens.set($event)" class="config-slider" />
+            </div>
+
+            <div class="config-group">
+                <label>Top P: {{ topP() }}</label>
+                <input type="range" min="0" max="1" step="0.1" [ngModel]="topP()" (ngModelChange)="topP.set($event)"
+                    class="config-slider" />
+            </div>
+
+            <div class="config-group">
+                <label>Frequency Penalty: {{ frequencyPenalty() }}</label>
+                <input type="range" min="-2" max="2" step="0.1" [ngModel]="frequencyPenalty()"
+                    (ngModelChange)="frequencyPenalty.set($event)" class="config-slider" />
+            </div>
+
+            <div class="config-group">
+                <label>Presence Penalty: {{ presencePenalty() }}</label>
+                <input type="range" min="-2" max="2" step="0.1" [ngModel]="presencePenalty()"
+                    (ngModelChange)="presencePenalty.set($event)" class="config-slider" />
+            </div>
+        </div>
+
+        @if (results().length > 0) {
+        <div class="results">
+            <h3>Results</h3>
+            @for (result of results(); track $index) {
+            <div class="result-item">{{ result }}</div>
+            }
+        </div>
+        }
+    </div>
+</div>

@@ -1,3 +1,8 @@
+## Language
+
+- In code use only english language, even explanations in code, comments, all content. (Please avoid other languages).
+- Please overwrite any non-english text with english.
+
 ## TypeScript Best Practices
 
 - Use strict type checking

@@ -1,0 +1,127 @@
+<div class="example-card right">
+    <div class="card-header">
+        <div class="badge right-badge">✅</div>
+        <h2>AI Augmentation: AI + Human Partnership</h2>
+    </div>
+
+    <div class="support-container">
+        <div class="chat-section">
+            <div class="chat-header">
+                <div class="agent-info">
+                    @if (currentHandler() === 'ai') {
+                    <div class="agent-avatar ai-avatar-good">🤖</div>
+                    <div class="agent-details">
+                        <strong>AI Assistant</strong>
+                        <span class="status">Quick answers • Escalates when needed</span>
+                    </div>
+                    } @else {
+                    <div class="agent-avatar human-avatar">👤</div>
+                    <div class="agent-details">
+                        <strong>Human Specialist</strong>
+                        <span class="status">Handling complex case</span>
+                    </div>
+                    }
+                </div>
+                <div class="stats-container">
+                    <div class="stats-badge right-stats">
+                        AI Success: {{ aiSuccessRate() }}%
+                    </div>
+                    <div class="stats-badge escalation-stats">
+                        Human: {{ humanHandoffRate() }}%
+                    </div>
+                </div>
+            </div>
+
+            <div class="chat-messages">
+                @for (message of messages(); track message.id) {
+                <div class="message" [class.user-message]="message.sender === 'user'"
+                    [class.ai-message]="message.sender === 'ai'" [class.human-message]="message.sender === 'human'">
+                    <div class="message-content">
+                        <div class="message-text">{{ message.text }}</div>
+                        @if (message.handoffReason) {
+                        <div class="handoff-badge">
+                            🔄 <strong>Smart Escalation:</strong> {{ message.handoffReason }}
+                        </div>
+                        }
+                    </div>
+                    <div class="message-time">
+                        {{ message.timestamp.toLocaleTimeString() }}
+                        @if (message.sender === 'human') {
+                        <span class="human-badge">• Human Agent</span>
+                        }
+                    </div>
+                </div>
+                }
+
+                @if (isTyping()) {
+                <div class="message ai-message">
+                    <div class="message-content">
+                        <div class="typing-indicator">
+                            <span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+                }
+            </div>
+
+            <div class="chat-input-section">
+                <div class="quick-issues">
+                    @for (issue of quickIssues; track issue) {
+                    <button class="quick-issue-btn" (click)="sendMessage(issue)">
+                        {{ issue }}
+                    </button>
+                    }
+                </div>
+                <div class="chat-input-wrapper">
+                    <input type="text" class="chat-input" [(ngModel)]="userInput" (keyup.enter)="sendMessage()"
+                        placeholder="Write your message here..." />
+                    <button class="send-button" (click)="sendMessage()">
+                        Send
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        @if (cases().length > 0) {
+        <div class="cases-section">
+            <h3>📊 Case Distribution</h3>
+            <div class="distribution-chart">
+                <div class="chart-bar ai-bar" [style.height.%]="aiSuccessRate()">
+                    <span>{{ aiSuccessRate() }}%</span>
+                </div>
+                <div class="chart-bar human-bar" [style.height.%]="humanHandoffRate()">
+                    <span>{{ humanHandoffRate() }}%</span>
+                </div>
+            </div>
+            <div class="chart-labels">
+                <span>AI Handled</span>
+                <span>Human Expert</span>
+            </div>
+
+            <h4>Recent Cases</h4>
+            @for (case of cases(); track case.id) {
+            <div class="case-card" [class.human-handled]="case.handler === 'human'">
+                <div class="case-header">
+                    <span class="case-id">#{{ case.id }}</span>
+                    <span class="case-complexity" [class.complex]="case.complexity === 'complex'">
+                        {{ case.complexity }}
+                    </span>
+                </div>
+                <div class="case-issue">{{ case.issue }}</div>
+                <div class="case-status">
+                    @if (case.handler === 'ai') {
+                    <span class="status-ai">🤖 AI resolved quickly</span>
+                    } @else if (case.escalated) {
+                    <span class="status-escalated">👤 Escalated to human (complex)</span>
+                    } @else {
+                    <span class="status-human">👤 Human specialist</span>
+                    }
+                </div>
+            </div>
+            }
+        </div>
+        }
+    </div>
+
+
+</div>

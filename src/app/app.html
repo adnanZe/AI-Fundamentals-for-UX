@@ -10,6 +10,9 @@
       (click)="selectExample('recruitment')">
       ⚖️ Value Alignment in AI Design
     </button>
+    <button class="tab-button" [class.active]="selectedExample() === 'support'" (click)="selectExample('support')">
+      🤝 AI Augmentation: Humans + AI
+    </button>
   </nav>
 </header>
 
@@ -19,10 +22,15 @@
     <app-wrong-example />
     <app-right-example />
   </div>
-  } @else {
+  } @else if (selectedExample() === 'recruitment') {
   <div class="examples-grid">
     <app-recruitment-wrong />
     <app-recruitment-right />
+  </div>
+  } @else {
+  <div class="examples-grid">
+    <app-support-wrong />
+    <app-support-right />
   </div>
   }
 </main>

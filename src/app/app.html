@@ -1,36 +1,73 @@
 <header class="header">
-  <h1>🤖 Human-Centered AI Principles</h1>
-  <p class="tagline">Understanding the mindset: Building AI that serves people, not the other way around</p>
-
-  <nav class="nav-tabs">
-    <button class="tab-button" [class.active]="selectedExample() === 'mindset'" (click)="selectExample('mindset')">
-      💭 Human-Centered Mindset
-    </button>
-    <button class="tab-button" [class.active]="selectedExample() === 'recruitment'"
-      (click)="selectExample('recruitment')">
-      ⚖️ Value Alignment in AI Design
-    </button>
-    <button class="tab-button" [class.active]="selectedExample() === 'support'" (click)="selectExample('support')">
-      🤝 AI Augmentation: Humans + AI
-    </button>
-  </nav>
+  <h1>🤖 {{ courseConfig.title }}</h1>
+  <p class="tagline">Interactive demonstrations organized by chapters and subchapters</p>
 </header>
 
-<main class="container">
-  @if (selectedExample() === 'mindset') {
-  <div class="examples-grid">
-    <app-wrong-example />
-    <app-right-example />
-  </div>
-  } @else if (selectedExample() === 'recruitment') {
-  <div class="examples-grid">
-    <app-recruitment-wrong />
-    <app-recruitment-right />
-  </div>
-  } @else {
-  <div class="examples-grid">
-    <app-support-wrong />
-    <app-support-right />
-  </div>
-  }
-</main>
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="accordion">
+      @for (chapter of courseConfig.chapters; track chapter.id) {
+      <div class="accordion-item">
+        <button class="accordion-header" [class.expanded]="isChapterExpanded(chapter.id)"
+          (click)="toggleChapter(chapter.id)">
+          <span class="accordion-icon">{{ isChapterExpanded(chapter.id) ? '▼' : '▶' }}</span>
+          <span class="accordion-title">{{ chapter.title }}</span>
+        </button>
+
+        @if (isChapterExpanded(chapter.id)) {
+        <div class="accordion-content">
+          @for (subchapter of chapter.subchapters; track subchapter.id) {
+          <div class="subchapter-item">
+            <button class="subchapter-header" [class.expanded]="isSubchapterExpanded(subchapter.id)"
+              (click)="toggleSubchapter(subchapter.id)">
+              <span class="accordion-icon">{{ isSubchapterExpanded(subchapter.id) ? '▼' : '▶' }}</span>
+              <span class="subchapter-title">{{ subchapter.title }}</span>
+            </button>
+
+            @if (isSubchapterExpanded(subchapter.id)) {
+            <div class="examples-list">
+              @for (example of subchapter.examples; track example.id) {
+              <button class="example-button" [class.active]="isExampleSelected(example.id)"
+                (click)="selectExample(example)">
+                {{ example.title }}
+              </button>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    @if (selectedExample()) {
+    <div class="content-header">
+      <h2>{{ selectedExample()!.title }}</h2>
+      <p class="breadcrumb">
+        {{ currentChapter()?.title }} / {{ currentSubchapter()?.title }}
+      </p>
+    </div>
+
+    <div class="examples-grid">
+      <div class="example-container">
+        <div class="example-label wrong">❌ Wrong Approach</div>
+        <ng-container [ngComponentOutlet]="selectedExample()!.wrongComponent" />
+      </div>
+
+      <div class="example-container">
+        <div class="example-label right">✅ Right Approach</div>
+        <ng-container [ngComponentOutlet]="selectedExample()!.rightComponent" />
+      </div>
+    </div>
+    } @else {
+    <div class="empty-state">
+      <h2>👈 Select an example from the sidebar</h2>
+      <p>Choose a chapter, then a subchapter, and finally an example to view the demonstration</p>
+    </div>
+    }
+  </main>
+</div>

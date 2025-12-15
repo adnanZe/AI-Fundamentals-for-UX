@@ -1,28 +1,68 @@
-import { Component, signal } from '@angular/core';
-import { WrongExampleComponent } from './components/wrong-example/wrong-example';
-import { RightExampleComponent } from './components/right-example/right-example';
-import { RecruitmentWrongComponent } from './components/recruitment-wrong/recruitment-wrong';
-import { RecruitmentRightComponent } from './components/recruitment-right/recruitment-right';
-import { SupportWrongComponent } from './components/support-wrong/support-wrong';
-import { SupportRightComponent } from './components/support-right/support-right';
+import { Component, signal, computed } from '@angular/core';
+import { NgComponentOutlet } from '@angular/common';
+import { COURSE_CONFIG } from './config/course.config';
+import { Chapter, Subchapter, ExampleComponent } from './models/course-structure';
 
 @Component({
   selector: 'app-root',
-  imports: [
-    WrongExampleComponent,
-    RightExampleComponent,
-    RecruitmentWrongComponent,
-    RecruitmentRightComponent,
-    SupportWrongComponent,
-    SupportRightComponent,
-  ],
+  imports: [NgComponentOutlet],
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
 export class App {
-  protected readonly selectedExample = signal<'mindset' | 'recruitment' | 'support'>('mindset');
+  protected readonly courseConfig = COURSE_CONFIG;
+  protected readonly expandedChapterId = signal<string | null>(null);
+  protected readonly expandedSubchapterId = signal<string | null>(null);
+  protected readonly selectedExample = signal<ExampleComponent | null>(null);
 
-  protected selectExample(example: 'mindset' | 'recruitment' | 'support'): void {
+  protected readonly currentChapter = computed(() => {
+    const chapterId = this.expandedChapterId();
+    return chapterId ? this.courseConfig.chapters.find((ch) => ch.id === chapterId) ?? null : null;
+  });
+
+  protected readonly currentSubchapter = computed(() => {
+    const subchapterId = this.expandedSubchapterId();
+    const chapter = this.currentChapter();
+    return chapter && subchapterId
+      ? chapter.subchapters.find((sub) => sub.id === subchapterId) ?? null
+      : null;
+  });
+
+  protected toggleChapter(chapterId: string): void {
+    if (this.expandedChapterId() === chapterId) {
+      this.expandedChapterId.set(null);
+      this.expandedSubchapterId.set(null);
+      this.selectedExample.set(null);
+    } else {
+      this.expandedChapterId.set(chapterId);
+      this.expandedSubchapterId.set(null);
+      this.selectedExample.set(null);
+    }
+  }
+
+  protected toggleSubchapter(subchapterId: string): void {
+    if (this.expandedSubchapterId() === subchapterId) {
+      this.expandedSubchapterId.set(null);
+      this.selectedExample.set(null);
+    } else {
+      this.expandedSubchapterId.set(subchapterId);
+      this.selectedExample.set(null);
+    }
+  }
+
+  protected selectExample(example: ExampleComponent): void {
     this.selectedExample.set(example);
+  }
+
+  protected isChapterExpanded(chapterId: string): boolean {
+    return this.expandedChapterId() === chapterId;
+  }
+
+  protected isSubchapterExpanded(subchapterId: string): boolean {
+    return this.expandedSubchapterId() === subchapterId;
+  }
+
+  protected isExampleSelected(exampleId: string): boolean {
+    return this.selectedExample()?.id === exampleId;
   }
 }

@@ -39,5 +39,10 @@ export const COURSE_CONFIG: CourseStructure = {
         },
       ],
     },
+    {
+      id: 'user-expectations-value',
+      title: 'User Expectations & Value',
+      subchapters: [],
+    },
   ],
 };

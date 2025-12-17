@@ -13,4 +13,11 @@ export const routes: Routes = [
         (m) => m.AI_FORM_COMPLETION_ROUTES
       ),
   },
+  {
+    path: 'ai-loading-states',
+    loadChildren: () =>
+      import('./features/ai-loading-states/ai-loading-states.routes').then(
+        (m) => m.AI_LOADING_STATES_ROUTES
+      ),
+  },
 ];

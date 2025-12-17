@@ -154,6 +154,15 @@ export class HomeComponent {
       principles: ['User Agency', 'Transparency', 'Mental Models', 'Feedback Loops'],
     },
     {
+      title: 'Transparent Loading States',
+      description:
+        'Compare traditional loading spinners with transparent AI process visualization that shows step-by-step progress.',
+      icon: '⏳',
+      route: '/ai-loading-states',
+      status: 'available',
+      principles: ['Transparency', 'Mental Models', 'Trust Building', 'Feedback Loops'],
+    },
+    {
       title: 'Smart Content Suggestions',
       description:
         'See how AI provides contextual suggestions for content creation with confidence indicators and explanations.',

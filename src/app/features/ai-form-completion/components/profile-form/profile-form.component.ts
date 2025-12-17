@@ -12,12 +12,9 @@ type FormField = keyof ProfileFormData;
 
 @Component({
   selector: 'app-profile-form',
-  imports: [ReactiveFormsModule, AiSuggestionOverlayComponent, NgClass, RouterLink],
+  imports: [ReactiveFormsModule, AiSuggestionOverlayComponent, NgClass],
   template: `
     <div class="profile-form-container">
-      <!-- Back Button -->
-      <a routerLink="/" class="back-button"> ← Back to Home </a>
-
       <!-- Form -->
       <form [formGroup]="profileForm" class="form">
         <!-- Name Field -->

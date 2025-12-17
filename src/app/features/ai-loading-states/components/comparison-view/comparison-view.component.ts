@@ -6,12 +6,9 @@ import { TransparentLoadingComponent } from '../transparent-loading/transparent-
 
 @Component({
   selector: 'app-comparison-view',
-  imports: [RouterLink, SimpleLoadingComponent, TransparentLoadingComponent],
+  imports: [SimpleLoadingComponent, TransparentLoadingComponent],
   template: `
     <div class="comparison-container">
-      <!-- Back Button -->
-      <a routerLink="/" class="back-button"> ← Back to Home </a>
-
       <!-- Comparison Grid -->
       <div class="comparison-grid">
         <!-- Simple Loading (Before) -->

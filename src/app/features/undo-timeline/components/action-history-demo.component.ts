@@ -6,12 +6,11 @@ import { AIAction } from '../models/action.model';
 
 @Component({
   selector: 'app-action-history-demo',
-  imports: [FormsModule, RouterLink],
+  imports: [FormsModule],
   template: `
     <div class="demo-container">
       <!-- Header -->
       <div class="header">
-        <a routerLink="/" class="back-button">← Back to Home</a>
         <h1 class="title">AI Action History + Selective Undo</h1>
         <p class="subtitle">Track and selectively undo any AI action</p>
       </div>

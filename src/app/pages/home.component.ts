@@ -1,7 +1,7 @@
 import { Component, signal } from '@angular/core';
-import { ProfileFormComponent } from '../../features/ai-form-completion/components/profile-form/profile-form.component';
-import { ComparisonViewComponent } from '../../features/ai-loading-states/components/comparison-view/comparison-view.component';
-import { ActionHistoryDemoComponent } from '../../features/undo-timeline/components/action-history-demo.component';
+import { ProfileFormComponent } from '../features/ai-form-completion/components/profile-form/profile-form.component';
+import { ComparisonViewComponent } from '../features/ai-loading-states/components/comparison-view/comparison-view.component';
+import { ActionHistoryDemoComponent } from '../features/undo-timeline/components/action-history-demo.component';
 
 interface FeatureCard {
   title: string;

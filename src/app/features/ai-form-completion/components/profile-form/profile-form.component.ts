@@ -15,175 +15,461 @@ type FormField = keyof ProfileFormData;
   imports: [ReactiveFormsModule, AiSuggestionOverlayComponent, NgClass],
   template: `
     <div class="profile-form-container">
-      <!-- Form -->
-      <form [formGroup]="profileForm" class="form">
-        <!-- Name Field -->
-        <div class="form-field">
-          <label for="name" class="label"> Full Name <span class="required">*</span> </label>
-          <div class="input-group">
-            <input
-              id="name"
-              type="text"
-              formControlName="name"
-              (blur)="onFieldBlur('name')"
-              class="input"
-              placeholder="Enter your full name"
-              [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'name' }"
-            />
-            <button
-              type="button"
-              class="suggest-btn"
-              [disabled]="isLoadingSuggestion() || !profileForm.get('name')?.value"
-              (click)="requestSuggestion('name')"
-            >
-              @if (isLoadingSuggestion() && currentField() === 'name') {
-                <span class="spinner"></span> Loading...
-              } @else {
-                ✨ Get AI Suggestion
-              }
+      <div class="layout-wrapper">
+        <!-- Sidebar with Feature Info -->
+        <aside class="sidebar">
+          <!-- Master Toggle -->
+          <div class="master-toggle">
+            <label class="toggle-label">
+              <input
+                type="checkbox"
+                [checked]="!aiEnabled()"
+                (change)="toggleAI()"
+                class="toggle-input"
+              />
+              <span class="toggle-text">🚫 Disable AI Support (Classic Form)</span>
+            </label>
+          </div>
+
+          <!-- Feature Toggles -->
+          <div class="features-control">
+            <!-- Accept Edit Reject Toggle -->
+            <div class="info-section" [class.disabled]="!aiEnabled()">
+              <div class="section-header">
+                <h2 class="section-title">Accept Edit Reject</h2>
+                <label class="feature-toggle">
+                  <input
+                    type="checkbox"
+                    [checked]="acceptEditRejectEnabled()"
+                    (change)="toggleFeature('acceptEditReject')"
+                    [disabled]="!aiEnabled()"
+                    class="toggle-input small"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <p class="section-subtitle">AI suggests content, but you stay in control.</p>
+              <ul class="feature-points">
+                <li>Review AI suggestions before applying them.</li>
+                <li>Accept, edit, or reject each suggestion.</li>
+                <li>AI explains why a suggestion was made.</li>
+              </ul>
+            </div>
+
+            <!-- Reasoning & Confidence Section -->
+            <div class="info-section" [class.disabled]="!aiEnabled()">
+              <div class="section-header">
+                <h2 class="section-title">Reasoning + Confidence</h2>
+                <label class="feature-toggle">
+                  <input
+                    type="checkbox"
+                    [checked]="reasoningEnabled()"
+                    (change)="toggleFeature('reasoning')"
+                    [disabled]="!aiEnabled()"
+                    class="toggle-input small"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <p class="section-subtitle">Transparency builds trust.</p>
+              <ul class="section-points">
+                <li>See why the AI made this suggestion.</li>
+                <li>Confidence levels help you decide how much to trust it.</li>
+                <li>AI uncertainty is visible, not hidden.</li>
+              </ul>
+            </div>
+
+            <!-- Feedback Section -->
+            <div class="info-section" [class.disabled]="!aiEnabled()">
+              <div class="section-header">
+                <h2 class="section-title">Feedback System</h2>
+                <label class="feature-toggle">
+                  <input
+                    type="checkbox"
+                    [checked]="feedbackEnabled()"
+                    (change)="toggleFeature('feedback')"
+                    [disabled]="!aiEnabled()"
+                    class="toggle-input small"
+                  />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+              <p class="section-subtitle">Your feedback is part of the experience.</p>
+              <ul class="section-points">
+                <li>Quick feedback helps evaluate AI suggestions.</li>
+                <li>Like or dislike to express usefulness.</li>
+                <li>Report issues when something feels wrong.</li>
+              </ul>
+            </div>
+          </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+          <!-- Quick Examples -->
+          <div class="quick-examples">
+            <span class="examples-label">Try an example:</span>
+            <button type="button" class="example-btn" (click)="loadExample('login')">
+              🔐 Login Issue
+            </button>
+            <button type="button" class="example-btn" (click)="loadExample('billing')">
+              💳 Billing Problem
+            </button>
+            <button type="button" class="example-btn" (click)="loadExample('technical')">
+              ⚠️ Technical Error
+            </button>
+            <button type="button" class="example-btn" (click)="loadExample('vague')">
+              ❓ Vague Request
             </button>
           </div>
-          @if (currentSuggestion()?.field === 'name') {
-            <app-ai-suggestion-overlay
-              [suggestion]="currentSuggestion()!"
-              (accept)="acceptSuggestion($event)"
-              (modify)="modifySuggestion($event)"
-              (reject)="rejectSuggestion()"
-            />
-          }
-        </div>
 
-        <!-- Role Field -->
-        <div class="form-field">
-          <label for="role" class="label">
-            Professional Role <span class="required">*</span>
-          </label>
-          <div class="input-group">
-            <input
-              id="role"
-              type="text"
-              formControlName="role"
-              (blur)="onFieldBlur('role')"
-              class="input"
-              placeholder="e.g., Frontend Developer"
-              [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'role' }"
-            />
-            <button
-              type="button"
-              class="suggest-btn"
-              [disabled]="isLoadingSuggestion() || !profileForm.get('role')?.value"
-              (click)="requestSuggestion('role')"
-            >
-              @if (isLoadingSuggestion() && currentField() === 'role') {
-                <span class="spinner"></span> Loading...
-              } @else {
-                ✨ Get AI Suggestion
+          <!-- Form -->
+          <form [formGroup]="profileForm" class="form">
+            <!-- Subject Field -->
+            <div class="form-field">
+              <label for="subject" class="label"> Subject <span class="required">*</span> </label>
+              <div class="input-group">
+                <input
+                  id="subject"
+                  type="text"
+                  formControlName="subject"
+                  (blur)="onFieldBlur('subject')"
+                  class="input"
+                  placeholder="Brief description of your issue"
+                  [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'subject' }"
+                />
+                @if (aiEnabled()) {
+                  <button
+                    type="button"
+                    class="suggest-btn"
+                    [disabled]="isLoadingSuggestion() || !profileForm.get('subject')?.value"
+                    (click)="requestSuggestion('subject')"
+                  >
+                    @if (isLoadingSuggestion() && currentField() === 'subject') {
+                      <span class="spinner"></span> Loading...
+                    } @else {
+                      ✨ Get AI Suggestion
+                    }
+                  </button>
+                }
+              </div>
+              @if (currentSuggestion()?.field === 'subject') {
+                <app-ai-suggestion-overlay
+                  [suggestion]="currentSuggestion()!"
+                  [showReasoning]="reasoningEnabled()"
+                  [showFeedback]="feedbackEnabled()"
+                  [showActions]="acceptEditRejectEnabled()"
+                  (accept)="acceptSuggestion($event)"
+                  (modify)="modifySuggestion($event)"
+                  (reject)="rejectSuggestion()"
+                />
               }
-            </button>
-          </div>
-          @if (currentSuggestion()?.field === 'role') {
-            <app-ai-suggestion-overlay
-              [suggestion]="currentSuggestion()!"
-              (accept)="acceptSuggestion($event)"
-              (modify)="modifySuggestion($event)"
-              (reject)="rejectSuggestion()"
-            />
-          }
-        </div>
+            </div>
 
-        <!-- Bio Field -->
-        <div class="form-field">
-          <label for="bio" class="label"> Bio <span class="required">*</span> </label>
-          <div class="input-group">
-            <textarea
-              id="bio"
-              formControlName="bio"
-              (blur)="onFieldBlur('bio')"
-              class="textarea"
-              rows="4"
-              placeholder="Tell us about yourself..."
-              [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'bio' }"
-            ></textarea>
-            <button
-              type="button"
-              class="suggest-btn"
-              [disabled]="isLoadingSuggestion() || !profileForm.get('bio')?.value"
-              (click)="requestSuggestion('bio')"
-            >
-              @if (isLoadingSuggestion() && currentField() === 'bio') {
-                <span class="spinner"></span> Loading...
-              } @else {
-                ✨ Get AI Suggestion
+            <!-- Description Field -->
+            <div class="form-field">
+              <label for="description" class="label">
+                Description <span class="required">*</span>
+              </label>
+              <div class="input-group">
+                <textarea
+                  id="description"
+                  formControlName="description"
+                  (blur)="onFieldBlur('description')"
+                  class="textarea"
+                  rows="8"
+                  placeholder="Describe your issue in detail... What happened? When did it start? What have you tried?"
+                  [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'description' }"
+                ></textarea>
+                @if (aiEnabled()) {
+                  <button
+                    type="button"
+                    class="suggest-btn"
+                    [disabled]="isLoadingSuggestion() || !profileForm.get('description')?.value"
+                    (click)="requestSuggestion('description')"
+                  >
+                    @if (isLoadingSuggestion() && currentField() === 'description') {
+                      <span class="spinner"></span> Loading...
+                    } @else {
+                      ✨ Get AI Suggestion
+                    }
+                  </button>
+                }
+              </div>
+              @if (currentSuggestion()?.field === 'description') {
+                <app-ai-suggestion-overlay
+                  [suggestion]="currentSuggestion()!"
+                  [showReasoning]="reasoningEnabled()"
+                  [showFeedback]="feedbackEnabled()"
+                  [showActions]="acceptEditRejectEnabled()"
+                  (accept)="acceptSuggestion($event)"
+                  (modify)="modifySuggestion($event)"
+                  (reject)="rejectSuggestion()"
+                />
               }
-            </button>
-          </div>
-          @if (currentSuggestion()?.field === 'bio') {
-            <app-ai-suggestion-overlay
-              [suggestion]="currentSuggestion()!"
-              (accept)="acceptSuggestion($event)"
-              (modify)="modifySuggestion($event)"
-              (reject)="rejectSuggestion()"
-            />
-          }
-        </div>
+            </div>
 
-        <!-- Hobbies Field -->
-        <div class="form-field">
-          <label for="hobbies" class="label"> Hobbies & Interests </label>
-          <div class="input-group">
-            <input
-              id="hobbies"
-              type="text"
-              formControlName="hobbies"
-              (blur)="onFieldBlur('hobbies')"
-              class="input"
-              placeholder="e.g., reading, music, sports"
-              [ngClass]="{ 'has-suggestion': currentSuggestion()?.field === 'hobbies' }"
-            />
-            <button
-              type="button"
-              class="suggest-btn"
-              [disabled]="isLoadingSuggestion() || !profileForm.get('hobbies')?.value"
-              (click)="requestSuggestion('hobbies')"
-            >
-              @if (isLoadingSuggestion() && currentField() === 'hobbies') {
-                <span class="spinner"></span> Loading...
-              } @else {
-                ✨ Get AI Suggestion
-              }
-            </button>
-          </div>
-          @if (currentSuggestion()?.field === 'hobbies') {
-            <app-ai-suggestion-overlay
-              [suggestion]="currentSuggestion()!"
-              (accept)="acceptSuggestion($event)"
-              (modify)="modifySuggestion($event)"
-              (reject)="rejectSuggestion()"
-            />
-          }
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="form-actions">
-          <button type="button" class="btn btn-reset" (click)="resetForm()">🔄 Reset Form</button>
-          <button
-            type="submit"
-            class="btn btn-submit"
-            [disabled]="!profileForm.valid"
-            (click)="submitForm()"
-          >
-            💾 Save Profile
-          </button>
-        </div>
-      </form>
+            <!-- Action Buttons -->
+            <div class="form-actions">
+              <button type="button" class="btn btn-reset" (click)="resetForm()">
+                🔄 Reset Form
+              </button>
+              <button
+                type="submit"
+                class="btn btn-submit"
+                [disabled]="!profileForm.valid"
+                (click)="submitForm()"
+              >
+                📨 Submit Ticket
+              </button>
+            </div>
+          </form>
+        </main>
+      </div>
     </div>
   `,
   styles: [
     `
       .profile-form-container {
-        max-width: 800px;
+        max-width: 1400px;
         margin: 0 auto;
         padding: 24px;
+      }
+
+      .layout-wrapper {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 32px;
+        align-items: start;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .master-toggle {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        padding: 16px;
+        border-radius: 12px;
+        border: 2px solid #f59e0b;
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+      }
+
+      .toggle-label {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        font-weight: 600;
+        color: #92400e;
+      }
+
+      .toggle-input {
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+      }
+
+      .toggle-text {
+        font-size: 1rem;
+      }
+
+      .features-control {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .control-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+        padding: 0 20px;
+      }
+
+      .info-section.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 6px;
+      }
+
+      .feature-toggle {
+        display: inline-flex;
+        align-items: center;
+        position: relative;
+        cursor: pointer;
+      }
+
+      .toggle-input.small {
+        width: 0;
+        height: 0;
+        opacity: 0;
+        position: absolute;
+      }
+
+      .toggle-slider {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        background: #cbd5e0;
+        border-radius: 24px;
+        transition: background 0.3s;
+      }
+
+      .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        left: 3px;
+        top: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: transform 0.3s;
+      }
+
+      .toggle-input:checked + .toggle-slider {
+        background: #667eea;
+      }
+
+      .toggle-input:checked + .toggle-slider::before {
+        transform: translateX(20px);
+      }
+
+      .toggle-input:disabled + .toggle-slider {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      .main-content {
+        min-width: 0;
+      }
+
+      .feature-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .feature-subtitle {
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+        opacity: 0.95;
+      }
+
+      .feature-points {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .feature-points li {
+        padding: 6px 0;
+        padding-left: 20px;
+        position: relative;
+        font-size: 0.85rem;
+        opacity: 0.9;
+      }
+
+      .feature-points li::before {
+        content: '✓';
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+        color: #a5f3fc;
+      }
+
+      .info-section {
+        background: white;
+        padding: 20px;
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        border-left: 4px solid #667eea;
+      }
+
+      .section-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 6px;
+      }
+
+      .section-subtitle {
+        font-size: 0.9rem;
+        color: #6b7280;
+        margin-bottom: 10px;
+        font-style: italic;
+      }
+
+      .section-points {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .section-points li {
+        padding: 5px 0;
+        padding-left: 20px;
+        position: relative;
+        font-size: 0.85rem;
+        color: #4b5563;
+      }
+
+      .section-points li::before {
+        content: '•';
+        position: absolute;
+        left: 8px;
+        color: #667eea;
+        font-weight: bold;
+      }
+
+      .quick-examples {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        padding: 16px 20px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+        border: 2px solid #bae6fd;
+      }
+
+      .examples-label {
+        font-weight: 600;
+        color: #0c4a6e;
+        font-size: 0.95rem;
+      }
+
+      .example-btn {
+        padding: 8px 16px;
+        background: white;
+        color: #0369a1;
+        border: 2px solid #0ea5e9;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .example-btn:hover {
+        background: #0ea5e9;
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
       }
 
       .back-button {
@@ -356,13 +642,17 @@ export class ProfileFormComponent {
   protected readonly currentField = signal<FormField | null>(null);
   protected readonly isLoadingSuggestion = computed(() => this.aiService.loading());
 
+  // Feature toggles
+  protected readonly aiEnabled = signal(true);
+  protected readonly acceptEditRejectEnabled = signal(true);
+  protected readonly reasoningEnabled = signal(true);
+  protected readonly feedbackEnabled = signal(true);
+
   constructor() {
     // Initialize form with validators
     this.profileForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      bio: ['', [Validators.required, Validators.minLength(10)]],
-      role: ['', [Validators.required, Validators.minLength(2)]],
-      hobbies: [''],
+      subject: ['', [Validators.required, Validators.minLength(5)]],
+      description: ['', [Validators.required, Validators.minLength(20)]],
     });
 
     // Sync form changes with state service
@@ -440,8 +730,69 @@ export class ProfileFormComponent {
   submitForm(): void {
     if (this.profileForm.valid) {
       const formData = this.profileForm.value;
-      console.log('Profile submitted:', formData);
-      alert('✅ Profile saved successfully!\n\nCheck the console for the submitted data.');
+      console.log('Support ticket submitted:', formData);
+      alert(
+        '✅ Support ticket submitted successfully!\n\nOur team will review your request shortly.\n\nCheck the console for details.',
+      );
+    }
+  }
+
+  loadExample(type: 'login' | 'billing' | 'technical' | 'vague'): void {
+    const examples = {
+      login: {
+        subject: 'cant login',
+        description: 'i tried to login but it doesnt work',
+      },
+      billing: {
+        subject: 'charged twice',
+        description:
+          'I was charged twice for my subscription last month. The payment went through on March 15th.',
+      },
+      technical: {
+        subject: 'app crashing',
+        description:
+          'The app keeps crashing when I try to upload files. It happens every time I select a file larger than 5MB.',
+      },
+      vague: {
+        subject: 'help',
+        description: 'need help with something',
+      },
+    };
+
+    this.profileForm.patchValue(examples[type]);
+  }
+
+  toggleAI(): void {
+    this.aiEnabled.update((v) => !v);
+    if (!this.aiEnabled()) {
+      // Disable all features when AI is off
+      this.acceptEditRejectEnabled.set(false);
+      this.reasoningEnabled.set(false);
+      this.feedbackEnabled.set(false);
+      // Clear any active suggestions
+      this.currentSuggestion.set(null);
+      this.currentField.set(null);
+    } else {
+      // Re-enable all features when AI is turned back on
+      this.acceptEditRejectEnabled.set(true);
+      this.reasoningEnabled.set(true);
+      this.feedbackEnabled.set(true);
+    }
+  }
+
+  toggleFeature(feature: 'acceptEditReject' | 'reasoning' | 'feedback'): void {
+    if (!this.aiEnabled()) return;
+
+    switch (feature) {
+      case 'acceptEditReject':
+        this.acceptEditRejectEnabled.update((v) => !v);
+        break;
+      case 'reasoning':
+        this.reasoningEnabled.update((v) => !v);
+        break;
+      case 'feedback':
+        this.feedbackEnabled.update((v) => !v);
+        break;
     }
   }
 

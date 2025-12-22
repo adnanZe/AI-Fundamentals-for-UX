@@ -1,8 +1,6 @@
 export interface ProfileFormData {
-  name: string;
-  bio: string;
-  role: string;
-  hobbies: string;
+  subject: string;
+  description: string;
 }
 
 export interface FormFieldChange {

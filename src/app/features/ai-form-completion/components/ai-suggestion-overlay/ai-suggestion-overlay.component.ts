@@ -14,16 +14,20 @@ import { NgClass } from '@angular/common';
       <div class="flex items-center justify-between mb-3">
         <div class="flex items-center gap-2">
           <span class="ai-badge">✨ AI Suggestion</span>
-          <app-confidence-indicator [confidence]="suggestion().confidence" />
+          @if (showReasoning()) {
+            <app-confidence-indicator [confidence]="suggestion().confidence" />
+          }
         </div>
-        <button type="button" class="explain-btn" (click)="toggleExplanation()">
-          <span class="explain-icon">{{ showExplanation() ? '💡' : '🤔' }}</span>
-          <span class="explain-text">{{ showExplanation() ? 'Hide' : 'Why this?' }}</span>
-        </button>
+        @if (showReasoning()) {
+          <button type="button" class="explain-btn" (click)="toggleExplanation()">
+            <span class="explain-icon">{{ showExplanation() ? '💡' : '🤔' }}</span>
+            <span class="explain-text">{{ showExplanation() ? 'Hide' : 'Why this?' }}</span>
+          </button>
+        }
       </div>
 
       <!-- Explanation (collapsible) -->
-      @if (showExplanation()) {
+      @if (showExplanation() && showReasoning()) {
         <div class="explanation-box">
           <p class="text-sm text-gray-700">{{ suggestion().explanation }}</p>
         </div>
@@ -32,12 +36,20 @@ import { NgClass } from '@angular/common';
       <!-- Suggestion Text (view or edit mode) -->
       <div class="suggestion-content">
         @if (isEditing()) {
+          <div class="edit-mode-header">
+            <span class="edit-icon">✏️</span>
+            <span class="edit-title">Edit AI Suggestion</span>
+          </div>
           <textarea
             [(ngModel)]="editedText"
-            class="w-full p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-            rows="4"
-            placeholder="Edit the suggestion..."
+            class="edit-textarea"
+            rows="6"
+            placeholder="Modify the suggestion to better fit your needs..."
+            autofocus
           ></textarea>
+          <div class="edit-hint">
+            💡 Tip: Make any changes you want, then save to apply your customized version
+          </div>
         } @else {
           <div class="suggested-text">
             {{ suggestion().suggestedText }}
@@ -46,25 +58,34 @@ import { NgClass } from '@angular/common';
       </div>
 
       <!-- Action Buttons -->
-      <div class="action-buttons">
-        @if (isEditing()) {
-          <button type="button" class="btn btn-primary" (click)="saveModification()">
-            💾 Save Changes
-          </button>
-          <button type="button" class="btn btn-secondary" (click)="cancelEdit()">Cancel</button>
-        } @else {
-          <button type="button" class="btn btn-success" (click)="acceptSuggestion()">
-            ✓ Accept
-          </button>
-          <button type="button" class="btn btn-primary" (click)="startEditing()">✏️ Modify</button>
-          <button type="button" class="btn btn-danger" (click)="rejectSuggestion()">
-            ✗ Reject
-          </button>
-        }
-      </div>
+      @if (showActions()) {
+        <div class="action-buttons">
+          @if (isEditing()) {
+            <button type="button" class="btn btn-save" (click)="saveModification()">
+              💾 Save Changes
+            </button>
+            <button type="button" class="btn btn-cancel" (click)="cancelEdit()">↩️ Cancel</button>
+          } @else {
+            <button type="button" class="btn btn-success" (click)="acceptSuggestion()">
+              ✓ Accept
+            </button>
+            <button type="button" class="btn btn-primary" (click)="startEditing()">
+              ✏️ Modify
+            </button>
+            <button type="button" class="btn btn-danger" (click)="rejectSuggestion()">
+              ✗ Reject
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="read-only-badge">
+          <span class="badge-icon">🔒</span>
+          <span class="badge-text">Accept/Edit/Reject disabled - View only</span>
+        </div>
+      }
 
       <!-- Feedback Section -->
-      @if (!isEditing()) {
+      @if (!isEditing() && showFeedback()) {
         <app-feedback-buttons
           [suggestionId]="suggestion().id"
           [field]="suggestion().field"
@@ -162,6 +183,61 @@ import { NgClass } from '@angular/common';
         margin: 16px 0;
       }
 
+      .edit-mode-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 16px;
+        background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+        border: 2px solid #3b82f6;
+        border-radius: 8px 8px 0 0;
+        margin-bottom: -2px;
+      }
+
+      .edit-icon {
+        font-size: 1.3rem;
+      }
+
+      .edit-title {
+        font-weight: 700;
+        color: #1e40af;
+        font-size: 1rem;
+      }
+
+      .edit-textarea {
+        width: 100%;
+        padding: 16px;
+        border: 2px solid #3b82f6;
+        border-radius: 0 0 8px 8px;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #1f2937;
+        resize: vertical;
+        min-height: 120px;
+        font-family: inherit;
+        transition: all 0.2s ease;
+      }
+
+      .edit-textarea:focus {
+        outline: none;
+        border-color: #2563eb;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+      }
+
+      .edit-hint {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 12px;
+        padding: 10px 14px;
+        background: #fef3c7;
+        border-left: 4px solid #f59e0b;
+        border-radius: 4px;
+        font-size: 0.85rem;
+        color: #92400e;
+        line-height: 1.4;
+      }
+
       .suggested-text {
         background: #f9fafb;
         border: 1px solid #e5e7eb;
@@ -222,6 +298,29 @@ import { NgClass } from '@angular/common';
         background: #dc2626;
       }
 
+      .btn-save {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        font-weight: 700;
+        flex: 2;
+      }
+
+      .btn-save:hover {
+        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      }
+
+      .btn-cancel {
+        background: #f3f4f6;
+        color: #374151;
+        border: 2px solid #d1d5db;
+      }
+
+      .btn-cancel:hover {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+      }
+
       .btn-secondary {
         background: #6b7280;
         color: white;
@@ -233,12 +332,29 @@ import { NgClass } from '@angular/common';
 
       .editing {
         border-color: #3b82f6;
+        box-shadow:
+          0 0 0 3px rgba(59, 130, 246, 0.1),
+          0 4px 16px rgba(59, 130, 246, 0.2);
+        animation: pulseEdit 0.5s ease-out;
+      }
+
+      @keyframes pulseEdit {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.01);
+        }
       }
     `,
   ],
 })
 export class AiSuggestionOverlayComponent {
   suggestion = input.required<AISuggestion>();
+  showReasoning = input<boolean>(true);
+  showFeedback = input<boolean>(true);
+  showActions = input<boolean>(true);
 
   accept = output<string>();
   modify = output<string>();

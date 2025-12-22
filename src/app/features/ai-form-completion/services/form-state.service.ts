@@ -7,10 +7,8 @@ import { FormFieldChange, ProfileFormData } from '../models/form-data.model';
 export class FormStateService {
   // Form state signals
   private readonly formData = signal<ProfileFormData>({
-    name: '',
-    bio: '',
-    role: '',
-    hobbies: '',
+    subject: '',
+    description: '',
   });
 
   // History for undo functionality
@@ -99,10 +97,8 @@ export class FormStateService {
    */
   reset(): void {
     this.formData.set({
-      name: '',
-      bio: '',
-      role: '',
-      hobbies: '',
+      subject: '',
+      description: '',
     });
     this.history.set([]);
   }

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { ProfileFormComponent } from '../features/ai-form-completion/components/profile-form/profile-form.component';
 import { ComparisonViewComponent } from '../features/ai-loading-states/components/comparison-view/comparison-view.component';
 import { ActionHistoryDemoComponent } from '../features/undo-timeline/components/action-history-demo.component';
@@ -6,6 +6,7 @@ import { ActionHistoryDemoComponent } from '../features/undo-timeline/components
 interface FeatureCard {
   title: string;
   description: string;
+  subtext: string;
   icon: string;
   id: string;
   status: 'available' | 'coming-soon';
@@ -16,13 +17,22 @@ interface FeatureCard {
   selector: 'app-home',
   imports: [ProfileFormComponent, ComparisonViewComponent, ActionHistoryDemoComponent],
   template: `
+    <header class="header">
+      <h1>{{ pageTitle() }}</h1>
+    </header>
     @if (!selectedDemo()) {
       <div class="home-container">
+        <div class="desktop-notice">
+          <span class="notice-icon">💻</span>
+          <span class="notice-text">This demo is optimized for desktop viewing only</span>
+        </div>
         <div class="features-grid">
           @for (feature of features; track feature.id) {
             <div class="feature-card" [class.coming-soon]="feature.status === 'coming-soon'">
               <div class="card-icon">{{ feature.icon }}</div>
               <h2 class="card-title">{{ feature.title }}</h2>
+              <p class="card-description">{{ feature.description }}</p>
+              <p class="card-subtext">{{ feature.subtext }}</p>
 
               @if (feature.status === 'available') {
                 <button (click)="selectDemo(feature.id)" class="card-button">Try Demo →</button>
@@ -53,10 +63,49 @@ interface FeatureCard {
   `,
   styles: [
     `
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        padding: 20px 40px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+      }
+
+      .header h1 {
+        margin: 0;
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: white;
+        text-align: center;
+      }
+
       .home-container {
         max-width: 1200px;
         margin: 0 auto;
         padding: 40px 24px;
+      }
+
+      .desktop-notice {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        color: #78350f;
+        padding: 16px 24px;
+        border-radius: 12px;
+        margin-bottom: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        font-weight: 600;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+      }
+
+      .notice-icon {
+        font-size: 1.5rem;
+      }
+
+      .notice-text {
+        font-size: 1rem;
       }
 
       .hero {
@@ -117,13 +166,31 @@ interface FeatureCard {
         font-size: 1.5rem;
         font-weight: 700;
         color: #1f2937;
+        margin-bottom: 12px;
+      }
+
+      .card-description {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+        line-height: 1.5;
+      }
+
+      .card-subtext {
+        font-size: 0.875rem;
+        color: #6b7280;
         margin-bottom: 24px;
+        line-height: 1.5;
+        font-style: italic;
+        flex-grow: 1;
       }
 
       .card-button {
         display: inline-block;
         width: 100%;
         padding: 14px 24px;
+        margin-top: auto;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
         text-decoration: none;
@@ -189,11 +256,19 @@ interface FeatureCard {
 export class HomeComponent {
   protected readonly selectedDemo = signal<string | null>(null);
 
+  protected readonly pageTitle = computed(() => {
+    const demoId = this.selectedDemo();
+    if (!demoId) return '🤖 AI Fundamentals for UX';
+
+    const feature = this.features.find((f) => f.id === demoId);
+    return feature ? `🤖 ${feature.title}` : '🤖 AI Fundamentals for UX';
+  });
+
   protected readonly features: FeatureCard[] = [
     {
       title: 'AI-assisted Form Completion',
-      description:
-        'Experience how AI can help users complete forms while maintaining full control. Accept, modify, or reject AI suggestions.',
+      description: 'AI suggestions with full user control.',
+      subtext: 'Explore how AI can assist without taking over decisions.',
       icon: '✨',
       id: 'ai-form-completion',
       status: 'available',
@@ -201,8 +276,8 @@ export class HomeComponent {
     },
     {
       title: 'Transparent Loading States',
-      description:
-        'Compare traditional loading spinners with transparent AI process visualization that shows step-by-step progress.',
+      description: 'Making AI processes visible during loading.',
+      subtext: 'Compare classic spinners with transparent AI progress.',
       icon: '⏳',
       id: 'ai-loading-states',
       status: 'available',
@@ -210,8 +285,8 @@ export class HomeComponent {
     },
     {
       title: 'AI Action History + Selective Undo',
-      description:
-        'Track all AI actions with detailed history and selectively undo any specific action for precise control.',
+      description: 'Safety nets for AI-powered interactions.',
+      subtext: 'Track, review, and undo AI actions step by step.',
       icon: '📋',
       id: 'action-history',
       status: 'available',

@@ -36,156 +36,169 @@ export class AiSuggestionService {
     context: Partial<ProfileFormData>,
   ): AISuggestion {
     switch (field) {
-      case 'name':
-        return this.suggestName(currentValue);
-      case 'bio':
-        return this.suggestBio(currentValue, context);
-      case 'role':
-        return this.suggestRole(currentValue);
-      case 'hobbies':
-        return this.suggestHobbies(currentValue);
+      case 'subject':
+        return this.suggestSubject(currentValue, context);
+      case 'description':
+        return this.suggestDescription(currentValue, context);
       default:
         return this.defaultSuggestion(field, currentValue);
     }
   }
 
-  private suggestName(currentValue: string): AISuggestion {
-    const words = currentValue.trim().split(' ');
-    const confidence = this.calculateConfidence(currentValue.length, 5);
+  private suggestSubject(currentValue: string, context: Partial<ProfileFormData>): AISuggestion {
+    let suggestedSubject = currentValue.trim();
+    let confidence: ConfidenceLevel = 'medium';
+    let explanation = 'Improved subject line for clarity.';
 
-    // Capitalize each word properly
-    const formatted = words
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-
-    return {
-      id: this.generateId(),
-      field: 'name',
-      suggestedText: formatted,
-      confidence,
-      explanation: 'Formatted name with proper capitalization for professional appearance.',
-      originalText: currentValue,
-    };
-  }
-
-  private suggestBio(currentValue: string, context: Partial<ProfileFormData>): AISuggestion {
-    const hasRole = context.role && context.role.length > 0;
-    const hasHobbies = context.hobbies && context.hobbies.length > 0;
-
-    let enrichedBio = currentValue;
-
-    if (hasRole && !currentValue.toLowerCase().includes(context.role!.toLowerCase())) {
-      enrichedBio += ` As a ${context.role}, I bring expertise and passion to my work.`;
-    }
-
-    if (
-      hasHobbies &&
-      !currentValue.toLowerCase().includes('hobby') &&
-      !currentValue.toLowerCase().includes('interest')
-    ) {
-      enrichedBio += ` In my free time, I enjoy ${context.hobbies}.`;
-    }
-
-    // If bio is too short, suggest expansion
-    if (currentValue.length < 50 && !hasRole && !hasHobbies) {
-      enrichedBio = `${currentValue} I'm passionate about creating meaningful experiences and continuous learning.`;
-    }
-
-    const confidence = this.calculateConfidence(
-      currentValue.length,
-      hasRole && hasHobbies ? 30 : 20,
-    );
-
-    return {
-      id: this.generateId(),
-      field: 'bio',
-      suggestedText: enrichedBio.trim(),
-      confidence,
-      explanation:
-        hasRole || hasHobbies
-          ? 'Enhanced bio using your role and hobbies to create a more complete profile.'
-          : 'Expanded bio with engaging professional language.',
-      originalText: currentValue,
-    };
-  }
-
-  private suggestRole(currentValue: string): AISuggestion {
-    const roleKeywords: Record<string, string> = {
-      developer: 'Software Developer',
-      design: 'UX/UI Designer',
-      frontend: 'Frontend Developer',
-      backend: 'Backend Developer',
-      fullstack: 'Full-Stack Developer',
-      product: 'Product Manager',
-      engineer: 'Software Engineer',
-      architect: 'Solution Architect',
-    };
-
-    let suggestedRole = currentValue;
+    // Detect common issues and categorize
     const lowerValue = currentValue.toLowerCase();
 
-    // Find matching professional title
-    for (const [keyword, title] of Object.entries(roleKeywords)) {
-      if (lowerValue.includes(keyword)) {
-        suggestedRole = title;
-        break;
+    // Check for vague subjects
+    if (
+      lowerValue.length < 10 ||
+      lowerValue === 'help' ||
+      lowerValue === 'problem' ||
+      lowerValue === 'issue'
+    ) {
+      // Try to infer from description if available
+      if (context.description) {
+        const descLower = context.description.toLowerCase();
+        if (descLower.includes('login') || descLower.includes('password')) {
+          suggestedSubject = 'Unable to access account';
+          confidence = 'high';
+          explanation =
+            'Detected login issue from description. Subject line clarified for faster support routing.';
+        } else if (
+          descLower.includes('payment') ||
+          descLower.includes('billing') ||
+          descLower.includes('charge')
+        ) {
+          suggestedSubject = 'Billing inquiry - unexpected charge';
+          confidence = 'high';
+          explanation =
+            'Identified billing concern. Clear subject helps route to correct department.';
+        } else if (
+          descLower.includes('error') ||
+          descLower.includes('crash') ||
+          descLower.includes('bug')
+        ) {
+          suggestedSubject = 'Technical error - application malfunction';
+          confidence = 'medium';
+          explanation = 'Technical issue detected. Descriptive subject aids troubleshooting.';
+        } else {
+          suggestedSubject =
+            currentValue.length > 0 ? `Support needed: ${currentValue}` : 'General support inquiry';
+          confidence = 'low';
+          explanation =
+            'Subject was too vague. Added context, but please refine for better assistance.';
+        }
+      } else {
+        suggestedSubject =
+          currentValue.length > 0 ? `Support request: ${currentValue}` : 'General inquiry';
+        confidence = 'low';
+        explanation = 'Vague subject detected. Consider adding more details about your issue.';
+      }
+    } else {
+      // Improve existing subject
+      if (
+        lowerValue.includes('cant') ||
+        lowerValue.includes('cannot') ||
+        lowerValue.includes('wont')
+      ) {
+        suggestedSubject = currentValue.replace(/cant/gi, 'cannot').replace(/wont/gi, 'will not');
+        confidence = 'high';
+        explanation = 'Formalized language for professional ticket.';
+      } else if (!suggestedSubject.match(/^[A-Z]/)) {
+        suggestedSubject = suggestedSubject.charAt(0).toUpperCase() + suggestedSubject.slice(1);
+        confidence = 'high';
+        explanation = 'Capitalized subject line for proper formatting.';
       }
     }
 
-    // If no match, capitalize properly
-    if (suggestedRole === currentValue) {
-      suggestedRole = currentValue
-        .split(' ')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-        .join(' ');
-    }
-
-    const confidence = this.calculateConfidence(currentValue.length, 5);
-
     return {
       id: this.generateId(),
-      field: 'role',
-      suggestedText: suggestedRole,
+      field: 'subject',
+      suggestedText: suggestedSubject,
       confidence,
-      explanation: 'Standardized role title based on common professional terminology.',
+      explanation,
       originalText: currentValue,
     };
   }
 
-  private suggestHobbies(currentValue: string): AISuggestion {
-    const hobbies = currentValue
-      .split(',')
-      .map((h) => h.trim())
-      .filter((h) => h.length > 0);
+  private suggestDescription(
+    currentValue: string,
+    context: Partial<ProfileFormData>,
+  ): AISuggestion {
+    let suggestedDescription = currentValue.trim();
+    let confidence: ConfidenceLevel = 'medium';
+    let explanation = 'Enhanced description for better clarity.';
 
-    // Enrich each hobby with descriptive language
-    const enrichedHobbies = hobbies.map((hobby) => {
-      const lower = hobby.toLowerCase();
+    const lowerValue = currentValue.toLowerCase();
 
-      if (lower.includes('read')) return 'reading books and articles';
-      if (lower.includes('music')) return 'listening to music and discovering new artists';
-      if (lower.includes('sport') || lower.includes('gym'))
-        return 'staying active through sports and fitness';
-      if (lower.includes('travel')) return 'traveling and exploring new cultures';
-      if (lower.includes('cook')) return 'cooking and experimenting with new recipes';
-      if (lower.includes('photo')) return 'photography and visual storytelling';
-      if (lower.includes('game')) return 'gaming and interactive entertainment';
-      if (lower.includes('paint') || lower.includes('draw'))
-        return 'creating art through painting and drawing';
+    // Check if description is too short or vague
+    if (currentValue.length < 20) {
+      confidence = 'low';
+      explanation =
+        'Description is too brief. Consider adding: When did this start? What error messages do you see? What have you tried?';
 
-      return hobby;
-    });
+      // Try to add helpful prompts based on subject
+      if (context.subject) {
+        const subjectLower = context.subject.toLowerCase();
+        if (subjectLower.includes('login') || subjectLower.includes('access')) {
+          suggestedDescription +=
+            '\n\nPlease include:\n- What error message appears?\n- When did you last successfully log in?\n- Which browser are you using?';
+        } else if (subjectLower.includes('billing') || subjectLower.includes('payment')) {
+          suggestedDescription +=
+            '\n\nPlease include:\n- Transaction date and amount\n- Last 4 digits of payment method\n- What you expected vs what happened';
+        } else {
+          suggestedDescription += '\n\nPlease provide more details about the issue.';
+        }
+      }
+    } else {
+      // Improve existing description
+      let improvements: string[] = [];
 
-    const suggestedText = enrichedHobbies.join(', ');
-    const confidence = this.calculateConfidence(currentValue.length, 10);
+      // Check for common issues
+      if (!lowerValue.match(/when|started|began|since/)) {
+        improvements.push('when the issue started');
+      }
+      if (
+        !lowerValue.match(/error|message|code/) &&
+        (lowerValue.includes('crash') || lowerValue.includes('fail'))
+      ) {
+        improvements.push('any error messages you see');
+      }
+      if (!lowerValue.match(/tried|attempted|tested/)) {
+        improvements.push("what steps you've already tried");
+      }
+
+      if (improvements.length > 0) {
+        suggestedDescription += `\n\nTo help us assist you faster, please also mention: ${improvements.join(
+          ', ',
+        )}.`;
+        confidence = 'medium';
+        explanation = `Added prompts for missing details: ${improvements.join(
+          ', ',
+        )}. This helps support team resolve your issue faster.`;
+      } else {
+        // Just formatting improvements
+        suggestedDescription = currentValue
+          .split('\n')
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .join('\n\n');
+        confidence = 'high';
+        explanation =
+          'Description looks good! Minor formatting improvements applied for readability.';
+      }
+    }
 
     return {
       id: this.generateId(),
-      field: 'hobbies',
-      suggestedText,
+      field: 'description',
+      suggestedText: suggestedDescription,
       confidence,
-      explanation:
-        'Enhanced hobby descriptions to make your profile more engaging and descriptive.',
+      explanation,
       originalText: currentValue,
     };
   }
